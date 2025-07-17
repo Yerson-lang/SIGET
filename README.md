@@ -70,18 +70,12 @@ pip install -r requirements.txt
 Crear archivo `.env` en la raíz del proyecto:
 ```env
 SECRET_KEY=tu-clave-secreta-aqui
-MONGO_URI=mongodb://localhost:27017/siged_db
 GOOGLE_MAPS_API_KEY=tu-api-key-de-google-maps
 FLASK_ENV=development
 ```
 
-5. **Iniciar MongoDB**
-```bash
-# En una terminal separada
-mongod
-```
 
-6. **Ejecutar la aplicación**
+5. **Ejecutar la aplicación**
 ```bash
 python app.py
 ```
