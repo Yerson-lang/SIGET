@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #F5E6D3 0%, #E8D5C4 50%, #5B9A9C 100%);
+        min-height: 100vh;
+    }
+    
+    .register-container {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .register-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        max-width: 1200px;
+        width: 100%;
+    }
+    
+    .register-left {
+        background: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);
+        padding: 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .register-left::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    .register-right {
+        padding: 3rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(91, 154, 156, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: var(--secondary-color);
+        border: 1px solid #dee2e6;
+        color: var(--primary-color);
+    }
+    
+    .btn-register {
+        background: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(91,154,156,0.4);
+    }
+    
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        background-color: #e9ecef;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+    
+    .strength-weak { background-color: #dc3545; width: 33%; }
+    .strength-medium { background-color: #ffc107; width: 66%; }
+    .strength-strong { background-color: #28a745; width: 100%; }
+    
+    .requirements-list {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    .requirement {
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
+    
+    .requirement.met {
+        color: #28a745;
+    }
+    
+    .requirement i {
+        width: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-11">
+                <div class="register-card">
+                    <div class="row g-0">
+                        <!-- Right Side (Form) -->
+                        <div class="col-md-7 register-right">
+                            <h3 class="mb-4">Crear una cuenta</h3>
+                            <p class="text-muted mb-4">Únete a S.IG-ED para ayudar en la gestión de emergencias</p>
+                            
+                            <form method="POST" action="{{ url_for('auth.register') }}" id="registerForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="username" class="form-label">Nombre de usuario</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-person"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="username" 
+                                                   name="username" required value="{{ username if username else '' }}"
+                                                   placeholder="usuario123" minlength="3" maxlength="20">
+                                        </div>
+                                        <small class="text-muted">Mínimo 3 caracteres</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Correo electrónico</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-envelope"></i>
+                                            </span>
+                                            <input type="email" class="form-control" id="email" 
+                                                   name="email" required value="{{ email if email else '' }}"
+                                                   placeholder="usuario@ejemplo.com">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password" class="form-label">Contraseña</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="password" 
+                                                   name="password" required placeholder="••••••••" minlength="8">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="password-strength">
+                                            <div class="password-strength-bar" id="strengthBar"></div>
+                                        </div>
+                                        <div class="requirements-list">
+                                            <div class="requirement" id="req-length">
+                                                <i class="bi bi-circle"></i> Mínimo 8 caracteres
+                                            </div>
+                                            <div class="requirement" id="req-upper">
+                                                <i class="bi bi-circle"></i> Una mayúscula
+                                            </div>
+                                            <div class="requirement" id="req-lower">
+                                                <i class="bi bi-circle"></i> Una minúscula
+                                            </div>
+                                            <div class="requirement" id="req-number">
+                                                <i class="bi bi-circle"></i> Un número
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="confirm_password" class="form-label">Confirmar contraseña</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="confirm_password" 
+                                                   name="confirm_password" required placeholder="••••••••">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="invalid-feedback" id="passwordMatch">
+                                            Las contraseñas no coinciden
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                        <label class="form-check-label" for="terms">
+                                            Acepto los <a href="#" class="text-decoration-none">términos y condiciones</a> 
+                                            y la <a href="#" class="text-decoration-none">política de privacidad</a>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-register" id="submitBtn">
+                                    <i class="bi bi-person-plus me-2"></i>
+                                    Crear cuenta
+                                </button>
+                            </form>
+                            
+                            <div class="text-center mt-4">
+                                <p class="mb-0">¿Ya tienes una cuenta? 
+                                    <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-bold">
+                                        Inicia sesión aquí
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Left Side (Info) -->
+                        <div class="col-md-5 register-left">
+                            <div class="text-center">
+                                <div class="flame-icon mb-4" style="font-size: 4rem;">
+                                    <i class="fas fa-fire-flame-curved"></i>
+                                </div>
+                                <h2>Únete a S.IG-ED</h2>
+                                <p class="mb-4">Forma parte de la red de respuesta ante emergencias más grande del país</p>
+                            </div>
+                            
+                            <div class="mt-5">
+                                <div class="d-flex align-items-start mb-4">
+                                    <i class="bi bi-shield-check fs-4 me-3 flex-shrink-0"></i>
+                                    <div>
+                                        <h6 class="mb-1">Seguridad garantizada</h6>
+                                        <p class="mb-0 small">Tus datos están protegidos con encriptación de última generación</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start mb-4">
+                                    <i class="bi bi-people fs-4 me-3 flex-shrink-0"></i>
+                                    <div>
+                                        <h6 class="mb-1">Comunidad activa</h6>
+                                        <p class="mb-0 small">Miles de voluntarios y profesionales trabajando juntos</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-graph-up fs-4 me-3 flex-shrink-0"></i>
+                                    <div>
+                                        <h6 class="mb-1">Impacto real</h6>
+                                        <p class="mb-0 small">Ayuda a salvar vidas y minimizar el impacto de desastres</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="position-absolute bottom-0 start-0 end-0 p-3 text-center">
+                                <small class="opacity-75">
+                                    Al registrarte, te unes a más de 10,000 usuarios activos
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Animación de entrada
+        $('.register-card').hide().fadeIn(1000);
+        
+        // Toggle password visibility
+        $('#togglePassword').click(function() {
+            const passwordField = $('#password');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('bi-eye bi-eye-slash');
+        });
+        
+        $('#toggleConfirmPassword').click(function() {
+            const passwordField = $('#confirm_password');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('bi-eye bi-eye-slash');
+        });
+        
+        // Password strength checker
+        $('#password').on('input', function() {
+            const password = $(this).val();
+            let strength = 0;
+            
+            // Check length
+            if (password.length >= 8) {
+                strength++;
+                $('#req-length').addClass('met').find('i').removeClass('bi-circle').addClass('bi-check-circle-fill');
+            } else {
+                $('#req-length').removeClass('met').find('i').removeClass('bi-check-circle-fill').addClass('bi-circle');
+            }
+            
+            // Check uppercase
+            if (/[A-Z]/.test(password)) {
+                strength++;
+                $('#req-upper').addClass('met').find('i').removeClass('bi-circle').addClass('bi-check-circle-fill');
+            } else {
+                $('#req-upper').removeClass('met').find('i').removeClass('bi-check-circle-fill').addClass('bi-circle');
+            }
+            
+            // Check lowercase
+            if (/[a-z]/.test(password)) {
+                strength++;
+                $('#req-lower').addClass('met').find('i').removeClass('bi-circle').addClass('bi-check-circle-fill');
+            } else {
+                $('#req-lower').removeClass('met').find('i').removeClass('bi-check-circle-fill').addClass('bi-circle');
+            }
+            
+            // Check number
+            if (/[0-9]/.test(password)) {
+                strength++;
+                $('#req-number').addClass('met').find('i').removeClass('bi-circle').addClass('bi-check-circle-fill');
+            } else {
+                $('#req-number').removeClass('met').find('i').removeClass('bi-check-circle-fill').addClass('bi-circle');
+            }
+            
+            // Update strength bar
+            const strengthBar = $('#strengthBar');
+            strengthBar.removeClass('strength-weak strength-medium strength-strong');
+            
+            if (strength <= 2) {
+                strengthBar.addClass('strength-weak');
+            } else if (strength === 3) {
+                strengthBar.addClass('strength-medium');
+            } else {
+                strengthBar.addClass('strength-strong');
+            }
+            
+            // Check password match
+            checkPasswordMatch();
+        });
+        
+        // Check password match
+        $('#confirm_password').on('input', checkPasswordMatch);
+        
+        function checkPasswordMatch() {
+            const password = $('#password').val();
+            const confirmPassword = $('#confirm_password').val();
+            
+            if (confirmPassword && password !== confirmPassword) {
+                $('#confirm_password').addClass('is-invalid');
+                $('#passwordMatch').show();
+            } else {
+                $('#confirm_password').removeClass('is-invalid');
+                $('#passwordMatch').hide();
+            }
+        }
+        
+        // Form validation
+        $('#registerForm').on('submit', function(e) {
+            const password = $('#password').val();
+            const confirmPassword = $('#confirm_password').val();
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                $('#confirm_password').addClass('is-invalid');
+                $('#passwordMatch').show();
+                return false;
+            }
+            
+            $('#submitBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Creando cuenta...');
+        });
+    });
+</script>
+{% endblock %}

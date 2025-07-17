@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Emergencia - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    #mapContainer {
+        height: 400px;
+        width: 100%;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .severity-option {
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .severity-option:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .severity-option.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(91, 154, 156, 0.1);
+    }
+    
+    .severity-low { border-left: 5px solid #F1C40F; }
+    .severity-medium { border-left: 5px solid #E67E22; }
+    .severity-high { border-left: 5px solid #E74C3C; }
+    .severity-critical { border-left: 5px solid #8E44AD; }
+    
+    .emergency-type-card {
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .emergency-type-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .emergency-type-card.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(91, 154, 156, 0.1);
+    }
+    
+    .emergency-type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">Reportar Nueva Emergencia</h1>
+            <p class="text-muted">Complete la información para reportar una nueva emergencia</p>
+        </div>
+    </div>
+    
+    <form id="emergencyForm" method="POST">
+        <!-- Tipo de Emergencia -->
+        <div class="form-section">
+            <h5 class="mb-3">1. Tipo de Emergencia</h5>
+            <div class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="fire">
+                        <div class="emergency-type-icon">🔥</div>
+                        <div>Incendio</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="flood">
+                        <div class="emergency-type-icon">🌊</div>
+                        <div>Inundación</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="earthquake">
+                        <div class="emergency-type-icon">🏚️</div>
+                        <div>Terremoto</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="storm">
+                        <div class="emergency-type-icon">⛈️</div>
+                        <div>Tormenta</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="accident">
+                        <div class="emergency-type-icon">🚨</div>
+                        <div>Accidente</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="medical">
+                        <div class="emergency-type-icon">🏥</div>
+                        <div>Médica</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="emergency-type-card" data-type="other">
+                        <div class="emergency-type-icon">⚠️</div>
+                        <div>Otro</div>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="type" name="type" required>
+        </div>
+        
+        <!-- Información Básica -->
+        <div class="form-section">
+            <h5 class="mb-3">2. Información de la Emergencia</h5>
+            <div class="mb-3">
+                <label for="title" class="form-label">Título de la Emergencia</label>
+                <input type="text" class="form-control" id="title" name="title" required 
+                       placeholder="Ej: Incendio en edificio residencial">
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Descripción Detallada</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required
+                          placeholder="Describa la situación actual, número de personas afectadas, recursos necesarios, etc."></textarea>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="affected_people" class="form-label">Personas Afectadas (estimado)</label>
+                    <input type="number" class="form-control" id="affected_people" name="affected_people" 
+                           min="0" value="0">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Severidad</label>
+                    <div class="row g-2">
+                        <div class="col-3">
+                            <div class="severity-option severity-low" data-severity="low">
+                                <small>Baja</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="severity-option severity-medium" data-severity="medium">
+                                <small>Media</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="severity-option severity-high" data-severity="high">
+                                <small>Alta</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="severity-option severity-critical" data-severity="critical">
+                                <small>Crítica</small>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="severity" name="severity" value="medium">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ubicación -->
+        <div class="form-section">
+            <h5 class="mb-3">3. Ubicación de la Emergencia</h5>
+            <p class="text-muted mb-3">Haga clic en el mapa para marcar la ubicación exacta</p>
+            
+            <div id="mapContainer"></div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Dirección</label>
+                        <input type="text" class="form-control" id="address" name="address" 
+                               placeholder="Calle, número, referencias...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="city" class="form-label">Ciudad</label>
+                        <input type="text" class="form-control" id="city" name="city" value="Lima">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="region" class="form-label">Región</label>
+                        <input type="text" class="form-control" id="region" name="region" value="Lima">
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" id="lat" name="lat" required>
+            <input type="hidden" id="lng" name="lng" required>
+        </div>
+        
+        <!-- Botones -->
+        <div class="text-end">
+            <a href="{{ url_for('dashboard.main') }}" class="btn btn-secondary me-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary-custom" id="submitBtn">
+                <i class="bi bi-check-circle"></i> Reportar Emergencia
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap" async defer></script>
+<script>
+    let map;
+    let marker;
+    
+    function initMap() {
+        // Centrar en Lima por defecto
+        const defaultLocation = { lat: -12.0464, lng: -77.0428 };
+        
+        map = new google.maps.Map(document.getElementById('mapContainer'), {
+            center: defaultLocation,
+            zoom: 12
+        });
+        
+        // Click en el mapa para colocar marcador
+        map.addListener('click', function(event) {
+            placeMarker(event.latLng);
+        });
+        
+        // Intentar obtener ubicación actual
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                map.setCenter(pos);
+            });
+        }
+    }
+    
+    function placeMarker(location) {
+        // Remover marcador anterior
+        if (marker) {
+            marker.setMap(null);
+        }
+        
+        // Crear nuevo marcador
+        marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            animation: google.maps.Animation.DROP
+        });
+        
+        // Actualizar campos de coordenadas
+        document.getElementById('lat').value = location.lat();
+        document.getElementById('lng').value = location.lng();
+        
+        // Obtener dirección aproximada
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: location }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                document.getElementById('address').value = results[0].formatted_address;
+            }
+        });
+    }
+    
+    // Selección de tipo de emergencia
+    $('.emergency-type-card').click(function() {
+        $('.emergency-type-card').removeClass('selected');
+        $(this).addClass('selected');
+        $('#type').val($(this).data('type'));
+    });
+    
+    // Selección de severidad
+    $('.severity-option').click(function() {
+        $('.severity-option').removeClass('selected');
+        $(this).addClass('selected');
+        $('#severity').val($(this).data('severity'));
+    });
+    
+    // Envío del formulario
+    $('#emergencyForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validar que se haya seleccionado ubicación
+        if (!$('#lat').val() || !$('#lng').val()) {
+            alert('Por favor seleccione la ubicación en el mapa');
+            return;
+        }
+        
+        // Validar tipo
+        if (!$('#type').val()) {
+            alert('Por favor seleccione el tipo de emergencia');
+            return;
+        }
+        
+        // Deshabilitar botón
+        $('#submitBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Enviando...');
+        
+        // Enviar formulario
+        $.ajax({
+            url: '{{ url_for("dashboard.new_emergency") }}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = '{{ url_for("dashboard.main") }}';
+                }
+            },
+            error: function(xhr) {
+                alert('Error al crear la emergencia: ' + (xhr.responseJSON?.message || 'Error desconocido'));
+                $('#submitBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Reportar Emergencia');
+            }
+        });
+    });
+    
+    // Seleccionar "Media" por defecto
+    $('.severity-option[data-severity="medium"]').click();
+</script>
+{% endblock %}

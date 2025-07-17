@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #F5E6D3 0%, #E8D5C4 50%, #5B9A9C 100%);
+        min-height: 100vh;
+    }
+    
+    .login-container {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        max-width: 1000px;
+        width: 100%;
+    }
+    
+    .login-left {
+        background: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);
+        padding: 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-left::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .login-left h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .login-left p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .flame-icon {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        animation: flicker 2s ease-in-out infinite;
+    }
+    
+    @keyframes flicker {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    
+    .login-right {
+        padding: 3rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(91, 154, 156, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: var(--secondary-color);
+        border: 1px solid #dee2e6;
+        color: var(--primary-color);
+    }
+    
+    .btn-login {
+        background: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(91,154,156,0.4);
+    }
+    
+    .divider {
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+    }
+    
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+    
+    .divider span {
+        background-color: white;
+        padding: 0 1rem;
+        position: relative;
+        color: #6c757d;
+    }
+    
+    .social-login {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .social-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        background-color: white;
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .wave-bg {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.3" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat;
+        background-size: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="login-card">
+                    <div class="row g-0">
+                        <!-- Left Side -->
+                        <div class="col-md-5 login-left">
+                            <div class="text-center">
+                                <div class="flame-icon">
+                                    <i class="fas fa-fire-flame-curved"></i>
+                                </div>
+                                <h2>S.IG-ED</h2>
+                                <p>Sistema de Gestión de Datos Distribuidos para Seguimiento de Emergencias y Desastres Naturales</p>
+                            </div>
+                            <div class="mt-5">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-shield-check fs-4 me-3"></i>
+                                    <span>Monitoreo en tiempo real</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-geo-alt fs-4 me-3"></i>
+                                    <span>Geolocalización precisa</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-people fs-4 me-3"></i>
+                                    <span>Coordinación eficiente</span>
+                                </div>
+                            </div>
+                            <div class="wave-bg"></div>
+                        </div>
+                        
+                        <!-- Right Side -->
+                        <div class="col-md-7 login-right">
+                            <h3 class="mb-4">Bienvenido de nuevo</h3>
+                            <p class="text-muted mb-4">Ingresa tus credenciales para acceder al sistema</p>
+                            
+                            <form method="POST" action="{{ url_for('auth.login') }}">
+                                <div class="mb-3">
+                                    <label for="username_or_email" class="form-label">Usuario o Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-person"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="username_or_email" 
+                                               name="username_or_email" required 
+                                               placeholder="usuario@ejemplo.com">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="password" 
+                                               name="password" required placeholder="••••••••">
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                                        <label class="form-check-label" for="remember">
+                                            Recordarme
+                                        </label>
+                                    </div>
+                                    <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none">
+                                        ¿Olvidaste tu contraseña?
+                                    </a>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-login">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                                    Iniciar Sesión
+                                </button>
+                            </form>
+                            
+                            <div class="divider">
+                                <span>O continúa con</span>
+                            </div>
+                            
+                            <div class="social-login">
+                                <button class="social-btn">
+                                    <i class="fab fa-google me-2"></i>
+                                    Google
+                                </button>
+                                <button class="social-btn">
+                                    <i class="fab fa-microsoft me-2"></i>
+                                    Microsoft
+                                </button>
+                            </div>
+                            
+                            <div class="text-center">
+                                <p class="mb-0">¿No tienes una cuenta? 
+                                    <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-bold">
+                                        Regístrate aquí
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animación de entrada
+    $(document).ready(function() {
+        $('.login-card').hide().fadeIn(1000);
+        
+        // Mostrar/ocultar contraseña
+        $('#togglePassword').click(function() {
+            const passwordField = $('#password');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('bi-eye bi-eye-slash');
+        });
+    });
+</script>
+{% endblock %}

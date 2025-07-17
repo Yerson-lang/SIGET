@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .report-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .report-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .report-type {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .report-type.emergency { background-color: #e74c3c; }
+    .report-type.analysis { background-color: #3498db; }
+    .report-type.summary { background-color: #27ae60; }
+    .report-type.statistical { background-color: #f39c12; }
+    
+    .report-content {
+        color: #495057;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    
+    .report-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4A8486 100%);
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .create-report-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4A8486 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(91,154,156,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .create-report-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(91,154,156,0.6);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 mb-0">Reportes</h1>
+            <p class="text-muted">Análisis y documentación de emergencias</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if current_user.is_operator() %}
+            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#newReportModal">
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Reporte
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ reports|length }}</div>
+                <div>Total de Reportes</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ reports|selectattr('type', 'equalto', 'emergency')|list|length }}</div>
+                <div>Reportes de Emergencia</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ reports|selectattr('type', 'equalto', 'analysis')|list|length }}</div>
+                <div>Análisis</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ reports|sum(attribute='views', default=0) }}</div>
+                <div>Total de Vistas</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="filter-section">
+        <div class="row align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Tipo de Reporte</label>
+                <select class="form-select" id="filterType">
+                    <option value="">Todos los tipos</option>
+                    <option value="emergency">Emergencia</option>
+                    <option value="analysis">Análisis</option>
+                    <option value="summary">Resumen</option>
+                    <option value="statistical">Estadístico</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha desde</label>
+                <input type="date" class="form-control" id="filterDateFrom">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha hasta</label>
+                <input type="date" class="form-control" id="filterDateTo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Buscar</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar reportes...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reports List -->
+    <div class="row">
+        <div class="col-12">
+            {% if reports %}
+                {% for report in reports %}
+                <div class="report-card" data-type="{{ report.type }}">
+                    <div class="report-header">
+                        <div>
+                            <h3 class="report-title">{{ report.title }}</h3>
+                            <div class="report-meta">
+                                <span><i class="bi bi-person"></i> {{ report.created_by }}</span>
+                                <span><i class="bi bi-calendar"></i> {{ report.created_at.strftime('%d/%m/%Y') }}</span>
+                                <span><i class="bi bi-eye"></i> {{ report.views }} vistas</span>
+                            </div>
+                        </div>
+                        <span class="report-type {{ report.type }}">{{ report.type|title }}</span>
+                    </div>
+                    
+                    <div class="report-content">
+                        {{ report.content[:200] }}{% if report.content|length > 200 %}...{% endif %}
+                    </div>
+                    
+                    {% if report.tags %}
+                    <div class="mb-3">
+                        {% for tag in report.tags %}
+                        <span class="badge bg-secondary me-1">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="report-actions">
+                        <a href="/reports/{{ report._id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Ver completo
+                        </a>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i> Descargar PDF
+                        </button>
+                        {% if current_user.is_operator() %}
+                        <button class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <h4>No hay reportes disponibles</h4>
+                    <p>Los reportes aparecerán aquí una vez que se creen.</p>
+                    {% if current_user.is_operator() %}
+                    <button class="btn btn-primary-custom mt-3" data-bs-toggle="modal" data-bs-target="#newReportModal">
+                        <i class="bi bi-plus-circle me-2"></i>Crear primer reporte
+                    </button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+{% if current_user.is_operator() %}
+<button class="create-report-btn" data-bs-toggle="modal" data-bs-target="#newReportModal">
+    <i class="bi bi-plus"></i>
+</button>
+{% endif %}
+
+<!-- New Report Modal -->
+<div class="modal fade" id="newReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Crear Nuevo Reporte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newReportForm">
+                    <div class="mb-3">
+                        <label for="reportTitle" class="form-label">Título del Reporte</label>
+                        <input type="text" class="form-control" id="reportTitle" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="reportType" class="form-label">Tipo de Reporte</label>
+                            <select class="form-select" id="reportType" required>
+                                <option value="">Seleccionar tipo</option>
+                                <option value="emergency">Emergencia</option>
+                                <option value="analysis">Análisis</option>
+                                <option value="summary">Resumen</option>
+                                <option value="statistical">Estadístico</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="reportEmergency" class="form-label">Emergencia Relacionada (opcional)</label>
+                            <select class="form-select" id="reportEmergency">
+                                <option value="">Ninguna</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reportContent" class="form-label">Contenido</label>
+                        <textarea class="form-control" id="reportContent" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reportTags" class="form-label">Etiquetas (separadas por comas)</label>
+                        <input type="text" class="form-control" id="reportTags" placeholder="emergencia, análisis, lima">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reportVisibility" class="form-label">Visibilidad</label>
+                        <select class="form-select" id="reportVisibility">
+                            <option value="public">Público</option>
+                            <option value="private">Privado</option>
+                            <option value="restricted">Restringido</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary-custom" onclick="createReport()">
+                    <i class="bi bi-check-circle me-2"></i>Crear Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Filter reports by type
+        $('#filterType').change(function() {
+            const selectedType = $(this).val();
+            if (selectedType) {
+                $('.report-card').hide();
+                $('.report-card[data-type="' + selectedType + '"]').show();
+            } else {
+                $('.report-card').show();
+            }
+        });
+        
+        // Search functionality
+        $('#searchInput').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('.report-card').each(function() {
+                const text = $(this).text().toLowerCase();
+                $(this).toggle(text.includes(searchTerm));
+            });
+        });
+        
+        // Date filter
+        $('#filterDateFrom, #filterDateTo').change(function() {
+            // Implement date filtering logic here
+        });
+    });
+    
+    function createReport() {
+        const data = {
+            title: $('#reportTitle').val(),
+            type: $('#reportType').val(),
+            content: $('#reportContent').val(),
+            emergency_id: $('#reportEmergency').val() || null,
+            tags: $('#reportTags').val().split(',').map(tag => tag.trim()).filter(tag => tag),
+            visibility: $('#reportVisibility').val()
+        };
+        
+        $.ajax({
+            url: '/api/reports',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                $('#newReportModal').modal('hide');
+                location.reload();
+            },
+            error: function(xhr) {
+                alert('Error al crear el reporte: ' + xhr.responseJSON.error);
+            }
+        });
+    }
+</script>
+{% endblock %}

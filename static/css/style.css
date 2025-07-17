@@ -1,0 +1,401 @@
+/* S.IG-ED - Sistema de Gestión de Emergencias y Desastres
+   Estilos personalizados
+   ========================================= */
+
+/* Variables CSS adicionales */
+:root {
+    --primary-gradient: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);
+    --secondary-gradient: linear-gradient(135deg, #F5E6D3 0%, #E8D5C4 100%);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.15);
+    --shadow-xl: 0 20px 40px rgba(0,0,0,0.2);
+    --transition-base: all 0.3s ease;
+}
+
+/* Animaciones personalizadas */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Utilidades de animación */
+.animate-slide-right {
+    animation: slideInRight 0.5s ease-out;
+}
+
+.animate-slide-left {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-fade {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.animate-scale {
+    animation: scaleIn 0.3s ease-out;
+}
+
+/* Mejoras para formularios */
+.form-control,
+.form-select {
+    border: 2px solid #e9ecef;
+    transition: var(--transition-base);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(91, 154, 156, 0.25);
+}
+
+/* Tooltips personalizados */
+.tooltip-custom {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip-custom::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--dark-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.tooltip-custom:hover::after {
+    opacity: 1;
+}
+
+/* Mejoras para tablas */
+.table-custom {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.table-custom thead {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.table-custom tbody tr {
+    transition: var(--transition-base);
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(91, 154, 156, 0.05);
+    transform: scale(1.01);
+}
+
+/* Loading spinner personalizado */
+.spinner-custom {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    margin: 2rem auto;
+}
+
+.spinner-custom::before,
+.spinner-custom::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+}
+
+.spinner-custom::before {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-gradient);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.spinner-custom::after {
+    width: 70%;
+    height: 70%;
+    background: white;
+    top: 15%;
+    left: 15%;
+}
+
+/* Badges personalizados */
+.badge-custom {
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 500;
+    transition: var(--transition-base);
+}
+
+.badge-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Mejoras para modales */
+.modal-custom .modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-custom .modal-header {
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: 1rem 1rem 0 0;
+    border: none;
+}
+
+.modal-custom .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Timeline personalizado */
+.timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 4px solid white;
+    box-shadow: var(--shadow-md);
+}
+
+.timeline-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    width: 45%;
+    transition: var(--transition-base);
+}
+
+.timeline-item:nth-child(odd) .timeline-content {
+    margin-left: auto;
+}
+
+.timeline-content:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Progress bars personalizados */
+.progress-custom {
+    height: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-custom {
+    background: var(--primary-gradient);
+    height: 100%;
+    transition: width 1s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-custom::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Tabs personalizados */
+.tabs-custom .nav-link {
+    color: var(--dark-color);
+    border: none;
+    padding: 1rem 1.5rem;
+    transition: var(--transition-base);
+    position: relative;
+}
+
+.tabs-custom .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.tabs-custom .nav-link.active,
+.tabs-custom .nav-link:hover {
+    color: var(--primary-color);
+}
+
+.tabs-custom .nav-link.active::after {
+    transform: scaleX(1);
+}
+
+/* Mejoras para dropdowns */
+.dropdown-custom .dropdown-menu {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-lg);
+    padding: 0.5rem;
+    animation: scaleIn 0.2s ease-out;
+}
+
+.dropdown-custom .dropdown-item {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: var(--transition-base);
+}
+
+.dropdown-custom .dropdown-item:hover {
+    background-color: rgba(91, 154, 156, 0.1);
+    transform: translateX(5px);
+}
+
+/* Utility classes */
+.hover-shadow:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.hover-grow:hover {
+    transform: scale(1.05);
+}
+
+.text-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-primary {
+    background: var(--primary-gradient);
+}
+
+.bg-gradient-secondary {
+    background: var(--secondary-gradient);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .timeline::before {
+        left: 2rem;
+    }
+    
+    .timeline-item::before {
+        left: 2rem;
+    }
+    
+    .timeline-content {
+        width: calc(100% - 4rem);
+        margin-left: 4rem !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .footer-custom,
+    .btn,
+    .create-report-btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .card-custom {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+}

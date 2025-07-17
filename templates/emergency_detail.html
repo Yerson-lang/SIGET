@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}{{ emergency.title }} - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    .emergency-header {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        border-left: 5px solid {{ {'fire': '#E74C3C', 'flood': '#3498DB', 'earthquake': '#8B4513', 
+                                   'storm': '#7F8C8D', 'accident': '#E67E22', 'medical': '#27AE60', 
+                                   'other': '#95A5A6'}[emergency.type] }};
+    }
+    
+    .emergency-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    .update-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .update-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .update-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    
+    .update-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 1.5rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+    
+    #updateMap {
+        height: 400px;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .severity-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .severity-low { background-color: #F1C40F; color: #000; }
+    .severity-medium { background-color: #E67E22; color: #fff; }
+    .severity-high { background-color: #E74C3C; color: #fff; }
+    .severity-critical { background-color: #8E44AD; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="emergency-header">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="emergency-icon">
+                    {{ {'fire': '🔥', 'flood': '🌊', 'earthquake': '🏚️', 
+                        'storm': '⛈️', 'accident': '🚨', 'medical': '🏥', 
+                        'other': '⚠️'}[emergency.type] }}
+                </div>
+                <h1 class="h2 mb-3">{{ emergency.title }}</h1>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="status-badge status-{{ emergency.status }}">
+                        Estado: {{ emergency.status|title }}
+                    </span>
+                    <span class="severity-badge severity-{{ emergency.severity }}">
+                        Severidad: {{ emergency.severity|title }}
+                    </span>
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-geo-alt"></i> {{ emergency.city }}, {{ emergency.region }}
+                    </span>
+                    <span class="badge bg-info">
+                        <i class="bi bi-people"></i> {{ emergency.affected_people }} personas afectadas
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if current_user.is_operator() %}
+                <div class="btn-group">
+                    <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear"></i> Acciones
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="changeStatus('confirmed')">Confirmar</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="changeStatus('responding')">En respuesta</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="changeStatus('resolved')">Resolver</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#">Eliminar</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+                <a href="{{ url_for('dashboard.main') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Información principal -->
+        <div class="col-md-8">
+            <!-- Descripción -->
+            <div class="info-section">
+                <h5 class="mb-3">Descripción</h5>
+                <p>{{ emergency.description }}</p>
+                
+                <hr class="my-4">
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Reportado por</h6>
+                        <p>{{ reporter.username if reporter else 'Usuario desconocido' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Fecha de reporte</h6>
+                        <p>{{ emergency.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    {% if emergency.resolved_at %}
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Fecha de resolución</h6>
+                        <p>{{ emergency.resolved_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Tiempo de respuesta</h6>
+                        <p>{{ (emergency.resolved_at - emergency.created_at).days }} días</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Actualizaciones -->
+            <div class="info-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Actualizaciones</h5>
+                    {% if current_user.is_operator() %}
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#updateModal">
+                        <i class="bi bi-plus"></i> Agregar actualización
+                    </button>
+                    {% endif %}
+                </div>
+                
+                {% if updates %}
+                <div class="update-timeline">
+                    {% for update in updates %}
+                    <div class="update-item">
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>{{ update.user.username if update.user else 'Sistema' }}</strong>
+                            <small class="text-muted">{{ update.timestamp.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        <p class="mb-0">{{ update.message }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No hay actualizaciones aún</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Mapa y detalles -->
+        <div class="col-md-4">
+            <!-- Ubicación -->
+            <div class="info-section">
+                <h5 class="mb-3">Ubicación</h5>
+                <div id="updateMap"></div>
+                <div class="mt-3">
+                    <p class="mb-1"><strong>Dirección:</strong></p>
+                    <p class="text-muted">{{ emergency.address }}</p>
+                    <p class="mb-0">
+                        <small>Coordenadas: {{ emergency.latitude }}, {{ emergency.longitude }}</small>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Recursos necesarios -->
+            {% if emergency.resources_needed %}
+            <div class="info-section">
+                <h5 class="mb-3">Recursos Necesarios</h5>
+                <p>{{ emergency.resources_needed }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar actualización -->
+{% if current_user.is_operator() %}
+<div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Actualización</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <textarea class="form-control" id="updateMessage" rows="4" 
+                          placeholder="Escribe la actualización..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addUpdate()">
+                    <i class="bi bi-check"></i> Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initDetailMap" async defer></script>
+<script>
+    function initDetailMap() {
+        const location = { 
+            lat: {{ emergency.latitude }}, 
+            lng: {{ emergency.longitude }} 
+        };
+        
+        const map = new google.maps.Map(document.getElementById('updateMap'), {
+            center: location,
+            zoom: 15
+        });
+        
+        new google.maps.Marker({
+            position: location,
+            map: map,
+            title: '{{ emergency.title }}'
+        });
+    }
+    
+    function changeStatus(newStatus) {
+        if (confirm(`¿Cambiar el estado a ${newStatus}?`)) {
+            $.ajax({
+                url: '{{ url_for("dashboard.update_emergency", emergency_id=emergency.id) }}',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    action: 'status',
+                    status: newStatus
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error al actualizar: ' + (xhr.responseJSON?.message || 'Error desconocido'));
+                }
+            });
+        }
+    }
+    
+    function addUpdate() {
+        const message = $('#updateMessage').val().trim();
+        if (!message) {
+            alert('Por favor escribe una actualización');
+            return;
+        }
+        
+        $.ajax({
+            url: '{{ url_for("dashboard.update_emergency", emergency_id=emergency.id) }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'message',
+                message: message
+            }),
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert('Error al agregar actualización: ' + (xhr.responseJSON?.message || 'Error desconocido'));
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados de Búsqueda - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .search-filters {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .result-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    
+    .result-card.type-fire { border-left-color: #E74C3C; }
+    .result-card.type-flood { border-left-color: #3498DB; }
+    .result-card.type-earthquake { border-left-color: #8B4513; }
+    .result-card.type-storm { border-left-color: #7F8C8D; }
+    .result-card.type-accident { border-left-color: #E67E22; }
+    .result-card.type-medical { border-left-color: #27AE60; }
+    .result-card.type-other { border-left-color: #95A5A6; }
+    
+    .filter-tag {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+    
+    .no-results i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header de búsqueda -->
+    <div class="search-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-0">Resultados de Búsqueda</h1>
+                {% if query %}
+                <p class="mb-0 mt-2">
+                    Resultados para: <strong>"{{ query }}"</strong>
+                </p>
+                {% endif %}
+                <p class="text-muted mb-0">
+                    Encontrados {{ results|length }} resultados
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                    <i class="bi bi-funnel"></i> Filtros
+                </button>
+                <a href="{{ url_for('dashboard.main') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros activos -->
+    {% if filters.type or filters.status or filters.from or filters.to %}
+    <div class="mb-3">
+        <strong>Filtros activos:</strong>
+        {% if filters.type %}
+            <span class="filter-tag">Tipo: {{ filters.type }}</span>
+        {% endif %}
+        {% if filters.status %}
+            <span class="filter-tag">Estado: {{ filters.status }}</span>
+        {% endif %}
+        {% if filters.from %}
+            <span class="filter-tag">Desde: {{ filters.from }}</span>
+        {% endif %}
+        {% if filters.to %}
+            <span class="filter-tag">Hasta: {{ filters.to }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Formulario de filtros -->
+    <div class="collapse" id="filterCollapse">
+        <div class="search-filters">
+            <form method="GET" action="{{ url_for('dashboard.search') }}">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" class="form-control" name="q" value="{{ query }}" 
+                               placeholder="Buscar por título, descripción o ubicación...">
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" name="type">
+                            <option value="">Todos</option>
+                            <option value="fire" {% if filters.type == 'fire' %}selected{% endif %}>Incendio</option>
+                            <option value="flood" {% if filters.type == 'flood' %}selected{% endif %}>Inundación</option>
+                            <option value="earthquake" {% if filters.type == 'earthquake' %}selected{% endif %}>Terremoto</option>
+                            <option value="storm" {% if filters.type == 'storm' %}selected{% endif %}>Tormenta</option>
+                            <option value="accident" {% if filters.type == 'accident' %}selected{% endif %}>Accidente</option>
+                            <option value="medical" {% if filters.type == 'medical' %}selected{% endif %}>Médica</option>
+                            <option value="other" {% if filters.type == 'other' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" name="status">
+                            <option value="">Todos</option>
+                            <option value="reported" {% if filters.status == 'reported' %}selected{% endif %}>Reportado</option>
+                            <option value="confirmed" {% if filters.status == 'confirmed' %}selected{% endif %}>Confirmado</option>
+                            <option value="responding" {% if filters.status == 'responding' %}selected{% endif %}>Respondiendo</option>
+                            <option value="resolved" {% if filters.status == 'resolved' %}selected{% endif %}>Resuelto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Desde</label>
+                        <input type="date" class="form-control" name="from" value="{{ filters.from }}">
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" class="form-control" name="to" value="{{ filters.to }}">
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <a href="{{ url_for('dashboard.search') }}" class="btn btn-secondary">
+                        <i class="bi bi-x"></i> Limpiar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Resultados -->
+    <div class="row">
+        <div class="col-12">
+            {% if results %}
+                {% for emergency in results %}
+                <div class="result-card type-{{ emergency.type }}">
+                    <div class="row align-items-start">
+                        <div class="col-md-1 text-center">
+                            <div style="font-size: 2rem;">
+                                {{ {'fire': '🔥', 'flood': '🌊', 'earthquake': '🏚️', 
+                                    'storm': '⛈️', 'accident': '🚨', 'medical': '🏥', 
+                                    'other': '⚠️'}[emergency.type] }}
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h5 class="mb-1">
+                                <a href="{{ url_for('dashboard.emergency_detail', emergency_id=emergency.id) }}" 
+                                   class="text-decoration-none text-dark">
+                                    {{ emergency.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-2">{{ emergency.description[:200] }}...</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-geo-alt"></i> {{ emergency.city or 'Sin ciudad' }}
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="bi bi-calendar"></i> {{ emergency.created_at.strftime('%d/%m/%Y') }}
+                                </span>
+                                <span class="status-badge status-{{ emergency.status }}">
+                                    {{ emergency.status|title }}
+                                </span>
+                                <span class="badge severity-{{ emergency.severity }}">
+                                    Severidad: {{ emergency.severity|title }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <a href="{{ url_for('dashboard.emergency_detail', emergency_id=emergency.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver detalles
+                            </a>
+                            {% if current_user.is_operator() %}
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    onclick="updateEmergencyStatus({{ emergency.id }})">
+                                <i class="bi bi-pencil"></i> Actualizar
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <i class="bi bi-search"></i>
+                    <h4>No se encontraron resultados</h4>
+                    <p>Intenta con diferentes filtros o términos de búsqueda</p>
+                    <a href="{{ url_for('dashboard.search') }}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-clockwise"></i> Nueva búsqueda
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateEmergencyStatus(emergencyId) {
+        // Aquí iría la lógica para actualizar el estado
+        window.location.href = `/dashboard/emergency/${emergencyId}`;
+    }
+</script>
+{% endblock %}

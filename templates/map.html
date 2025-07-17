@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa de Emergencias - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: calc(100vh - 200px);
+        width: 100%;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .map-controls {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .emergency-marker {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .emergency-marker::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid inherit;
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 20px rgba(255, 0, 0, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+        }
+    }
+    
+    .info-window-content {
+        padding: 10px;
+        max-width: 300px;
+    }
+    
+    .info-window-content h6 {
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .filter-chip {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        border-radius: 2rem;
+        background: #f8f9fa;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-chip:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .filter-chip.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .legend-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .emergency-sidebar {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    .emergency-list-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .emergency-list-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .emergency-list-item.active {
+        background-color: var(--secondary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h1 class="h2 mb-0">Mapa de Emergencias</h1>
+            <p class="text-muted">Visualización en tiempo real de todas las emergencias activas</p>
+        </div>
+    </div>
+    
+    <!-- Map Controls -->
+    <div class="map-controls">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-2">Filtros</h5>
+                <div class="filter-chips">
+                    <span class="filter-chip active" data-filter="all">
+                        <i class="bi bi-globe"></i> Todas
+                    </span>
+                    <span class="filter-chip" data-filter="fire">
+                        🔥 Incendios
+                    </span>
+                    <span class="filter-chip" data-filter="flood">
+                        🌊 Inundaciones
+                    </span>
+                    <span class="filter-chip" data-filter="earthquake">
+                        🏚️ Terremotos
+                    </span>
+                    <span class="filter-chip" data-filter="storm">
+                        ⛈️ Tormentas
+                    </span>
+                    <span class="filter-chip" data-filter="accident">
+                        🚨 Accidentes
+                    </span>
+                    <span class="filter-chip" data-filter="medical">
+                        🏥 Médicas
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-primary-custom" onclick="centerMapOnUserLocation()">
+                    <i class="bi bi-geo-alt-fill"></i> Mi Ubicación
+                </button>
+                <button class="btn btn-outline-secondary" onclick="toggleHeatmap()">
+                    <i class="bi bi-thermometer-half"></i> Mapa de Calor
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map and Sidebar -->
+    <div class="row">
+        <div class="col-md-8">
+            <div id="map"></div>
+            
+            <!-- Map Legend -->
+            <div class="map-legend">
+                <h6 class="mb-2">Leyenda</h6>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #E74C3C;"></div>
+                    <span>Incendio</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #3498DB;"></div>
+                    <span>Inundación</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #8B4513;"></div>
+                    <span>Terremoto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #7F8C8D;"></div>
+                    <span>Tormenta</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #E67E22;"></div>
+                    <span>Accidente</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background-color: #27AE60;"></div>
+                    <span>Médica</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="emergency-sidebar">
+                <h5 class="mb-3">Emergencias Activas ({{ emergencies|length }})</h5>
+                <div id="emergencyList">
+                    {% for emergency in emergencies %}
+                    <div class="emergency-list-item" data-emergency-id="{{ emergency._id }}" 
+                         data-lat="{{ emergency.location.lat }}" data-lng="{{ emergency.location.lng }}">
+                        <div class="d-flex align-items-start">
+                            <span class="me-2" style="font-size: 1.5rem;">
+                                {{ {'fire': '🔥', 'flood': '🌊', 'earthquake': '🏚️', 'storm': '⛈️', 
+                                    'accident': '🚨', 'medical': '🏥', 'other': '⚠️'}[emergency.type] }}
+                            </span>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ emergency.title }}</h6>
+                                <p class="mb-1 small text-muted">{{ emergency.location.address }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="status-badge status-{{ emergency.status }}">
+                                        {{ emergency.status|title }}
+                                    </span>
+                                    <small class="text-muted">
+                                        {{ emergency.created_at.strftime('%H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&libraries=visualization&callback=initMap" async defer></script>
+
+<script>
+    let map;
+    let markers = [];
+    let heatmap;
+    let infoWindow;
+    let activeFilter = 'all';
+    
+    // Datos de emergencias
+    const emergencies = {{ emergencies|tojson }};
+    
+    // Colores por tipo de emergencia
+    const emergencyColors = {
+        'fire': '#E74C3C',
+        'flood': '#3498DB',
+        'earthquake': '#8B4513',
+        'storm': '#7F8C8D',
+        'accident': '#E67E22',
+        'medical': '#27AE60',
+        'other': '#95A5A6'
+    };
+    
+    // Iconos por tipo
+    const emergencyIcons = {
+        'fire': '🔥',
+        'flood': '🌊',
+        'earthquake': '🏚️',
+        'storm': '⛈️',
+        'accident': '🚨',
+        'medical': '🏥',
+        'other': '⚠️'
+    };
+    
+    function initMap() {
+        // Centrar mapa en Perú (o usar ubicación del usuario)
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: -12.0464, lng: -77.0428 }, // Lima, Perú
+            zoom: 12,
+            styles: [
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
+                }
+            ],
+            mapTypeControl: true,
+            streetViewControl: false
+        });
+        
+        infoWindow = new google.maps.InfoWindow();
+        
+        // Crear marcadores para cada emergencia
+        createMarkers();
+        
+        // Configurar mapa de calor
+        setupHeatmap();
+        
+        // Intentar obtener ubicación del usuario
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userPos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Agregar marcador de ubicación del usuario
+                    new google.maps.Marker({
+                        position: userPos,
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#4285F4',
+                            fillOpacity: 0.8,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 2
+                        },
+                        title: 'Tu ubicación'
+                    });
+                },
+                () => {
+                    console.log('No se pudo obtener la ubicación del usuario');
+                }
+            );
+        }
+    }
+    
+    function createMarkers() {
+        // Limpiar marcadores existentes
+        clearMarkers();
+        
+        emergencies.forEach(emergency => {
+            if (activeFilter !== 'all' && emergency.type !== activeFilter) {
+                return;
+            }
+            
+            const position = {
+                lat: parseFloat(emergency.location.lat),
+                lng: parseFloat(emergency.location.lng)
+            };
+            
+            // Crear elemento HTML para el marcador personalizado
+            const markerElement = document.createElement('div');
+            markerElement.className = 'emergency-marker';
+            if (emergency.status === 'reported' || emergency.status === 'confirmed') {
+                markerElement.className += ' pulse';
+            }
+            markerElement.style.backgroundColor = emergencyColors[emergency.type];
+            markerElement.innerHTML = emergencyIcons[emergency.type];
+            
+            // Crear marcador personalizado
+            const marker = new google.maps.marker.AdvancedMarkerElement({
+                position: position,
+                map: map,
+                title: emergency.title,
+                content: markerElement
+            });
+            
+            // Agregar evento click
+            marker.addListener('click', () => {
+                showEmergencyInfo(emergency, marker);
+            });
+            
+            markers.push(marker);
+        });
+    }
+    
+    function showEmergencyInfo(emergency, marker) {
+        const content = `
+            <div class="info-window-content">
+                <h6>${emergency.title}</h6>
+                <p class="mb-2">${emergency.description}</p>
+                <div class="mb-2">
+                    <strong>Ubicación:</strong> ${emergency.location.address}<br>
+                    <strong>Tipo:</strong> ${emergencyIcons[emergency.type]} ${emergency.type}<br>
+                    <strong>Estado:</strong> <span class="status-badge status-${emergency.status}">${emergency.status}</span><br>
+                    <strong>Severidad:</strong> ${emergency.severity}<br>
+                    <strong>Personas afectadas:</strong> ${emergency.affected_people || 'N/A'}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/dashboard/emergency/${emergency._id}" class="btn btn-sm btn-primary">
+                        Ver detalles
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        infoWindow.setContent(content);
+        infoWindow.open(map, marker);
+        
+        // Resaltar en la lista
+        $('.emergency-list-item').removeClass('active');
+        $(`.emergency-list-item[data-emergency-id="${emergency._id}"]`).addClass('active');
+    }
+    
+    function clearMarkers() {
+        markers.forEach(marker => {
+            marker.map = null;
+        });
+        markers = [];
+    }
+    
+    function setupHeatmap() {
+        const heatmapData = emergencies.map(emergency => ({
+            location: new google.maps.LatLng(
+                parseFloat(emergency.location.lat),
+                parseFloat(emergency.location.lng)
+            ),
+            weight: emergency.severity === 'critical' ? 10 : 
+                    emergency.severity === 'high' ? 7 : 
+                    emergency.severity === 'medium' ? 4 : 1
+        }));
+        
+        heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heatmapData,
+            map: null,
+            radius: 50,
+            gradient: [
+                'rgba(0, 255, 255, 0)',
+                'rgba(0, 255, 255, 1)',
+                'rgba(0, 191, 255, 1)',
+                'rgba(0, 127, 255, 1)',
+                'rgba(0, 63, 255, 1)',
+                'rgba(0, 0, 255, 1)',
+                'rgba(0, 0, 223, 1)',
+                'rgba(0, 0, 191, 1)',
+                'rgba(0, 0, 159, 1)',
+                'rgba(0, 0, 127, 1)',
+                'rgba(63, 0, 91, 1)',
+                'rgba(127, 0, 63, 1)',
+                'rgba(191, 0, 31, 1)',
+                'rgba(255, 0, 0, 1)'
+            ]
+        });
+    }
+    
+    function toggleHeatmap() {
+        heatmap.setMap(heatmap.getMap() ? null : map);
+    }
+    
+    function centerMapOnUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                map.setCenter(pos);
+                map.setZoom(14);
+            });
+        }
+    }
+    
+    // Event listeners
+    $(document).ready(function() {
+        // Filtros
+        $('.filter-chip').click(function() {
+            $('.filter-chip').removeClass('active');
+            $(this).addClass('active');
+            activeFilter = $(this).data('filter');
+            createMarkers();
+        });
+        
+        // Click en lista de emergencias
+        $('.emergency-list-item').click(function() {
+            const lat = parseFloat($(this).data('lat'));
+            const lng = parseFloat($(this).data('lng'));
+            const emergencyId = $(this).data('emergency-id');
+            
+            // Centrar mapa
+            map.setCenter({ lat: lat, lng: lng });
+            map.setZoom(15);
+            
+            // Encontrar y mostrar info del marcador
+            const emergency = emergencies.find(e => e._id === emergencyId);
+            const marker = markers.find(m => m.title === emergency.title);
+            if (marker) {
+                showEmergencyInfo(emergency, marker);
+            }
+        });
+        
+        // Auto-actualización cada 30 segundos
+        setInterval(function() {
+            // Aquí podrías hacer una llamada AJAX para obtener emergencias actualizadas
+            console.log('Actualizando mapa...');
+        }, 30000);
+    });
+</script>
+{% endblock %}

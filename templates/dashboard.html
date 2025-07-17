@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - S.IG-ED{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card.primary { border-left-color: var(--primary-color); }
+    .stat-card.danger { border-left-color: var(--danger-color); }
+    .stat-card.success { border-left-color: var(--success-color); }
+    .stat-card.warning { border-left-color: var(--warning-color); }
+    
+    .stat-icon {
+        width: 60px;
+        height: 100%;
+    }
+    
+    .emergency-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.3s ease;
+    }
+    
+    .emergency-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .emergency-item:last-child {
+        border-bottom: none;
+    }
+    
+    .emergency-type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .quick-action-btn {
+        background: white;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        padding: 1rem;
+        border-radius: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .quick-action-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(91,154,156,0.3);
+    }
+    
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    
+    .activity-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">Dashboard</h1>
+            <p class="text-muted">Bienvenido, {{ current_user.username }}. Aquí está el resumen de actividad.</p>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #5B9A9C 0%, #4A8486 100%);">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">{{ stats.total_emergencies }}</h3>
+                        <p class="text-muted mb-0">Total Emergencias</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card danger">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-danger">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">{{ stats.active_emergencies }}</h3>
+                        <p class="text-muted mb-0">Emergencias Activas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">{{ stats.resolved_today }}</h3>
+                        <p class="text-muted mb-0">Resueltas Hoy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h3 class="mb-0">{{ stats.response_teams }}</h3>
+                        <p class="text-muted mb-0">Equipos Activos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">Acciones Rápidas</h5>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a href="{{ url_for('dashboard.new_emergency') }}" class="quick-action-btn">
+                <i class="bi bi-plus-circle fs-2 mb-2"></i>
+                <h6 class="mb-0">Nueva Emergencia</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a href="{{ url_for('map_view') }}" class="quick-action-btn">
+                <i class="bi bi-map fs-2 mb-2"></i>
+                <h6 class="mb-0">Ver Mapa</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a href="{{ url_for('reports') }}" class="quick-action-btn">
+                <i class="bi bi-file-text fs-2 mb-2"></i>
+                <h6 class="mb-0">Generar Reporte</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <a href="{{ url_for('dashboard.search') }}" class="quick-action-btn">
+                <i class="bi bi-search fs-2 mb-2"></i>
+                <h6 class="mb-0">Buscar</h6>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Emergency Types Chart -->
+        <div class="col-md-6 mb-3">
+            <div class="chart-container">
+                <h5 class="mb-3">Emergencias por Tipo (Últimos 30 días)</h5>
+                <canvas id="emergencyTypesChart" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- Daily Activity Chart -->
+        <div class="col-md-6 mb-3">
+            <div class="chart-container">
+                <h5 class="mb-3">Actividad Diaria (Últimos 7 días)</h5>
+                <canvas id="dailyActivityChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Emergencies and Activity -->
+    <div class="row">
+        <!-- Recent Emergencies -->
+        <div class="col-md-8 mb-3">
+            <div class="card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Emergencias Recientes</h5>
+                        <a href="{{ url_for('dashboard.search') }}" class="btn btn-sm btn-outline-primary">
+                            Ver todas
+                        </a>
+                    </div>
+                    
+                    {% if recent_emergencies %}
+                        {% for emergency in recent_emergencies %}
+                        <div class="emergency-item">
+                            <div class="d-flex align-items-start">
+                                <div class="emergency-type-icon me-3" 
+                                     style="background-color: {{ emergency.type_info.color }}20; color: {{ emergency.type_info.color }};">
+                                    <span>{{ emergency.type_info.icon }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('dashboard.emergency_detail', emergency_id=emergency._id) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ emergency.title }}
+                                        </a>
+                                    </h6>
+                                    <p class="text-muted mb-2 small">{{ emergency.description[:100] }}...</p>
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-{{ emergency.status }} me-2">
+                                            {{ emergency.status|title }}
+                                        </span>
+                                        <span class="text-muted small">
+                                            <i class="bi bi-geo-alt"></i> {{ emergency.location.city }}
+                                        </span>
+                                        <span class="text-muted small ms-3">
+                                            <i class="bi bi-clock"></i> {{ emergency.created_at.strftime('%d/%m %H:%M') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">No hay emergencias recientes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity Timeline -->
+        <div class="col-md-4 mb-3">
+            <div class="card-custom">
+                <div class="card-body">
+                    <h5 class="mb-3">Actividad Reciente</h5>
+                    <div class="activity-timeline">
+                        <div class="activity-item">
+                            <small class="text-muted">Hace 5 minutos</small>
+                            <p class="mb-0">Nueva emergencia reportada en Lima</p>
+                        </div>
+                        <div class="activity-item">
+                            <small class="text-muted">Hace 15 minutos</small>
+                            <p class="mb-0">Equipo Alpha desplegado a zona norte</p>
+                        </div>
+                        <div class="activity-item">
+                            <small class="text-muted">Hace 1 hora</small>
+                            <p class="mb-0">Emergencia #1234 resuelta exitosamente</p>
+                        </div>
+                        <div class="activity-item">
+                            <small class="text-muted">Hace 2 horas</small>
+                            <p class="mb-0">Actualización de estado: 3 emergencias en progreso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Configuración de colores
+    const colors = {
+        primary: '#5B9A9C',
+        secondary: '#F5E6D3',
+        danger: '#E74C3C',
+        warning: '#F39C12',
+        success: '#27AE60',
+        info: '#3498DB'
+    };
+    
+    // Datos de tipos de emergencia
+    const emergencyTypesData = {{ emergency_types_data|tojson }};
+    const typeLabels = {
+        'fire': 'Incendio',
+        'flood': 'Inundación',
+        'earthquake': 'Terremoto',
+        'storm': 'Tormenta',
+        'accident': 'Accidente',
+        'medical': 'Emergencia Médica',
+        'other': 'Otro'
+    };
+    
+    const typeColors = {
+        'fire': '#E74C3C',
+        'flood': '#3498DB',
+        'earthquake': '#8B4513',
+        'storm': '#7F8C8D',
+        'accident': '#E67E22',
+        'medical': '#27AE60',
+        'other': '#95A5A6'
+    };
+    
+    // Gráfico de tipos de emergencia
+    const ctxTypes = document.getElementById('emergencyTypesChart').getContext('2d');
+    new Chart(ctxTypes, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(emergencyTypesData).map(key => typeLabels[key] || key),
+            datasets: [{
+                data: Object.values(emergencyTypesData),
+                backgroundColor: Object.keys(emergencyTypesData).map(key => typeColors[key] || '#95A5A6'),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Datos de actividad diaria
+    const dailyActivityData = {{ daily_activity_data|tojson }};
+    
+    // Gráfico de actividad diaria
+    const ctxDaily = document.getElementById('dailyActivityChart').getContext('2d');
+    new Chart(ctxDaily, {
+        type: 'line',
+        data: {
+            labels: dailyActivityData.map(item => {
+                const date = new Date(item._id);
+                return date.toLocaleDateString('es', { weekday: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Emergencias',
+                data: dailyActivityData.map(item => item.count),
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '20',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Auto-actualización cada 60 segundos
+    setInterval(function() {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}60px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        height:
